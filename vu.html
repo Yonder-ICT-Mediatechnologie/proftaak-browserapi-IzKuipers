@@ -43,17 +43,18 @@
         width: 0;
         background-color: #1abc9c;
         border-radius: 20px;
-        transition: width 0.5s ease, background-color 0.5s ease; /* Vertraagde overgang voor de balk */
+        transition: width 0.1s ease, background-color 0.5s ease;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
       }
 
-      #value {
+      #value,
+      #comparison {
         font-size: 24px;
         font-weight: bold;
         color: #ecf0f1;
         margin-top: 10px;
         text-align: center;
-        transition: opacity 0.5s ease; /* Vertraagde overgang voor de tekst */
+        transition: opacity 0.5s ease;
       }
 
       * {
@@ -66,6 +67,7 @@
   <body>
     <h1>Live VU Meter</h1>
     <p id="value">0 dB</p>
+    <p id="comparison">As loud as a ninja's whisper 🥷</p>
     <div id="vuMeter">
       <div id="vuBar"></div>
     </div>
@@ -84,34 +86,33 @@
           const dataArray = new Uint8Array(analyser.frequencyBinCount);
           const vuBar = document.getElementById("vuBar");
           const value = document.getElementById("value");
+          const comparison = document.getElementById("comparison");
 
-          let lastDb = 0; // Variabele voor vorige dB om de snelheid te reguleren
+          let lastDb = 0;
 
           function updateMeter() {
             requestAnimationFrame(updateMeter);
 
             analyser.getByteTimeDomainData(dataArray);
 
-            // Calculate RMS (Root Mean Square) to get a more accurate dB level
             let sum = 0;
             for (let i = 0; i < dataArray.length; i++) {
-              let val = (dataArray[i] - 128) / 128; // Normalize between -1 and 1
+              let val = (dataArray[i] - 128) / 128;
               sum += val * val;
             }
             const rms = Math.sqrt(sum / dataArray.length);
-            let dB = 20 * Math.log10(rms); // dB calculation based on RMS
+            let dB = 20 * Math.log10(rms);
 
-            // Gevoeligheid verlaagd door de vermenigvuldigingsfactor te verlagen
-            dB = Math.max(0, Math.min(100, (dB + 60) * 1.05)); // Verminderde gevoeligheid
+            dB = Math.max(0, Math.min(100, (dB + 60) * 1.05));
 
-            // Maak de verandering minder abrupt door de snelheid te verminderen
-            dB = lastDb + (dB - lastDb) * 0.2; // Vertraagt de verandering van de dB
+            dB = lastDb + (dB - lastDb) * 0.2;
 
             vuBar.style.width = dB + "%";
-            value.innerText = Math.round(dB) + " dB"; // Gebruik Math.round() voor een geheel getal
+            value.innerText = Math.round(dB) + " dB";
+            comparison.innerText = getFunnyComparison(dB);
             vuBar.style.backgroundColor = getColorForDecibels(dB);
 
-            lastDb = dB; // Update vorige dB voor de volgende frame
+            lastDb = dB;
           }
 
           updateMeter();
@@ -122,14 +123,26 @@
         });
 
       function getColorForDecibels(db) {
-        if (db <= 15) return "#B0E0E6"; // Light blue (Silent)
-        if (db <= 20) return "#98FB98"; // Light green (Whispered)
-        if (db <= 40) return "#7ed321"; // Green (Quiet)
-        if (db <= 60) return "#f8e71c"; // Yellow (Normal conversation)
-        if (db <= 70) return "#f5a623"; // Orange (Noisy)
-        if (db <= 90) return "#FF4500"; // Red-orange (Potential hearing damage)
-        if (db <= 100) return "#d0021b"; // Red (Hearing loss)
-        return "#8B0000"; // Dark red (Severe hearing damage)
+        if (db <= 15) return "#B0E0E6";
+        if (db <= 20) return "#98FB98";
+        if (db <= 40) return "#7ed321";
+        if (db <= 60) return "#f8e71c";
+        if (db <= 70) return "#f5a623";
+        if (db <= 90) return "#FF4500";
+        if (db <= 100) return "#d0021b";
+        return "#8B0000";
+      }
+
+      function getFunnyComparison(db) {
+        if (db <= 15) return "As loud as a ninja's whisper 🐱‍👤";
+        if (db <= 20) return "Like a cat plotting world domination 🐱";
+        if (db <= 40) return "Similar to a library's loudest book slam 📚";
+        if (db <= 60)
+          return "A normal conversation... or an intense whisper fight 🗣️";
+        if (db <= 70) return "Like arguing over UNO rules 🔥";
+        if (db <= 90) return "Rock concert for ants 🎸";
+        if (db <= 100) return "Jet engine karaoke night ✈️🎤";
+        return "EARTH-SHATTERING DOOM ☄️";
       }
     </script>
   </body>
