@@ -89,6 +89,7 @@
           const comparison = document.getElementById("comparison");
 
           let lastDb = 0;
+          let warningGiven = false;
 
           function updateMeter() {
             requestAnimationFrame(updateMeter);
@@ -112,7 +113,22 @@
             comparison.innerText = getFunnyComparison(dB);
             vuBar.style.backgroundColor = getColorForDecibels(dB);
 
+            if (dB >= 50 && !warningGiven) {
+              speakWarning("Warning! Volume is too high. Protect your ears.");
+              warningGiven = true;
+            } else if (dB < 50) {
+              warningGiven = false;
+            }
+
             lastDb = dB;
+          }
+
+          function speakWarning(message) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = "en-US";
+            utterance.rate = 1;
+            synth.speak(utterance);
           }
 
           updateMeter();
