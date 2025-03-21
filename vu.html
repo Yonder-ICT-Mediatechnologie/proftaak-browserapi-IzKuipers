@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VU Meter</title>
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap");
+
       html,
       body {
         margin: 0;
@@ -17,13 +19,18 @@
         justify-content: center;
         flex-direction: column;
         gap: 20px;
-        font-family: "Arial", sans-serif;
+        font-family: "Amatic SC", sans-serif;
         color: #ecf0f1;
       }
 
+      body.warning {
+        background-color: #502c2c;
+      }
+
       h1 {
-        font-size: 36px;
-        margin-bottom: 10px;
+        font-size: 48px;
+        margin-bottom: 20px;
+        font-weight: 1000;
         color: #ecf0f1;
       }
 
@@ -31,7 +38,7 @@
         width: 80%;
         max-width: 600px;
         height: 40px;
-        background-color: #436280;
+        background-color: #fff3;
         border-radius: 20px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         position: relative;
@@ -67,14 +74,16 @@
   <body>
     <h1>Live VU Meter</h1>
     <p id="value">0 dB</p>
-    <p id="comparison">As loud as a ninja's whisper 🥷</p>
+    <p id="comparison">As loud as a ninja's whisper</p>
     <div id="vuMeter">
       <div id="vuBar"></div>
     </div>
     <script>
+      // Vraag toegang tot de microfoon
       navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then((stream) => {
+          // Audio-instellingen
           const audioContext = new (window.AudioContext ||
             window.webkitAudioContext)();
           const analyser = audioContext.createAnalyser();
@@ -94,6 +103,7 @@
           function updateMeter() {
             requestAnimationFrame(updateMeter);
 
+            // Meet het geluidsniveau
             analyser.getByteTimeDomainData(dataArray);
 
             let sum = 0;
@@ -104,25 +114,32 @@
             const rms = Math.sqrt(sum / dataArray.length);
             let dB = 20 * Math.log10(rms);
 
+            // Converteer dB naar een percentage
             dB = Math.max(0, Math.min(100, (dB + 60) * 1.05));
 
+            // Maak de overgang soepeler
             dB = lastDb + (dB - lastDb) * 0.2;
 
+            // Update de UI
             vuBar.style.width = dB + "%";
             value.innerText = Math.round(dB) + " dB";
             comparison.innerText = getFunnyComparison(dB);
             vuBar.style.backgroundColor = getColorForDecibels(dB);
 
-            if (dB >= 50 && !warningGiven) {
+            // Geef een waarschuwing als het volume te hoog is
+            if (dB >= 65 && !warningGiven) {
               speakWarning("Warning! Volume is too high. Protect your ears.");
+              document.body.classList.add("warning");
               warningGiven = true;
-            } else if (dB < 50) {
+            } else if (dB < 65) {
+              document.body.classList.remove("warning");
               warningGiven = false;
             }
 
             lastDb = dB;
           }
 
+          // Spreek een waarschuwing uit
           function speakWarning(message) {
             const synth = window.speechSynthesis;
             const utterance = new SpeechSynthesisUtterance(message);
@@ -134,31 +151,34 @@
           updateMeter();
         })
         .catch((err) => {
-          console.error("Error accessing microphone:", err);
-          alert("Microphone access is required to run this VU meter.");
+          console.error("Fout bij toegang tot de microfoon:", err);
+          alert("Microfoon toegang is nodig om deze VU-meter te laten werken.");
         });
 
+      // Verander de balkkleur op basis van het volume
       function getColorForDecibels(db) {
-        if (db <= 15) return "#B0E0E6";
-        if (db <= 20) return "#98FB98";
-        if (db <= 40) return "#7ed321";
-        if (db <= 60) return "#f8e71c";
-        if (db <= 70) return "#f5a623";
-        if (db <= 90) return "#FF4500";
-        if (db <= 100) return "#d0021b";
-        return "#8B0000";
+        if (db <= 15) return "#B0E0E6"; // Zachtblauw
+        if (db <= 20) return "#98FB98"; // Lichtgroen
+        if (db <= 40) return "#7ed321"; // Groen
+        if (db <= 60) return "#f8e71c"; // Geel
+        if (db <= 70) return "#f5a623"; // Oranje
+        if (db <= 90) return "#FF4500"; // Rood-oranje
+        if (db <= 100) return "#d0021b"; // Rood
+        return "#8B0000"; // Donkerrood
       }
 
+      // Geef een grappige beschrijving afhankelijk van het volume
+
       function getFunnyComparison(db) {
-        if (db <= 15) return "As loud as a ninja's whisper 🐱‍👤";
-        if (db <= 20) return "Like a cat plotting world domination 🐱";
-        if (db <= 40) return "Similar to a library's loudest book slam 📚";
+        if (db <= 15) return "As loud as a ninja's whisper";
+        if (db <= 20) return "Like a cat plotting world domination";
+        if (db <= 40) return "Similar to a library's loudest book slam";
         if (db <= 60)
-          return "A normal conversation... or an intense whisper fight 🗣️";
-        if (db <= 70) return "Like arguing over UNO rules 🔥";
-        if (db <= 90) return "Rock concert for ants 🎸";
-        if (db <= 100) return "Jet engine karaoke night ✈️🎤";
-        return "EARTH-SHATTERING DOOM ☄️";
+          return "A normal conversation... or an intense whisper fight";
+        if (db <= 70) return "Like arguing over UNO rules";
+        if (db <= 90) return "Rock concert for ants";
+        if (db <= 100) return "Jet engine karaoke night";
+        return "EARTH-SHATTERING DOOM";
       }
     </script>
   </body>
